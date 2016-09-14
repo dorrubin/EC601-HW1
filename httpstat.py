@@ -101,16 +101,13 @@ def print_help():
 Usage: httpstat URL [CURL_OPTIONS]
        httpstat -h | --help
        httpstat --version
-
 Arguments:
   URL     url to request, could be with or without `http(s)://` prefix
-
 Options:
   CURL_OPTIONS  any curl supported options, except for -w -D -o -S -s,
                 which are already used internally.
   -h --help     show this screen.
   --version     show version.
-
 Environments:
   HTTPSTAT_SHOW_BODY    By default httpstat will write response body
                         in a tempfile, but you can let it print out by setting
@@ -126,22 +123,21 @@ def main():
         print_help()
         quit(None, 0)
 
-    for arg in args:
-        url = arg
-        if url in ['-h', '--help']:
-            print_help()
-            quit(None, 0)
-        elif url == '--version':
-            print('httpstat {}'.format(__version__))
-            quit(None, 0)
+    url = args[0]
+    if url in ['-h', '--help']:
+        print_help()
+        quit(None, 0)
+    elif url == '--version':
+        print('httpstat {}'.format(__version__))
+        quit(None, 0)
 
-        curl_args = args[1:]
+    curl_args = args[1:]
 
-        # check curl args
-        exclude_options = ['-w', '-D', '-o', '-s']
-        for i in exclude_options:
-            if i in curl_args:
-                quit(yellow('Error: {} is not allowed in extra curl args'.format(i)), 1)
+    # check curl args
+    exclude_options = ['-w', '-D', '-o', '-s']
+    for i in exclude_options:
+        if i in curl_args:
+            quit(yellow('Error: {} is not allowed in extra curl args'.format(i)), 1)
 
     # tempfile for output
     bodyf = tempfile.NamedTemporaryFile(delete=False)
