@@ -121,21 +121,22 @@ def main():
         print_help()
         quit(None, 0)
 
-    url = args[0]
-    if url in ['-h', '--help']:
-        print_help()
-        quit(None, 0)
-    elif url == '--version':
-        print('httpstat {}'.format(__version__))
-        quit(None, 0)
+    for arg in args:
+        url = arg
+        if url in ['-h', '--help']:
+            print_help()
+            quit(None, 0)
+        elif url == '--version':
+            print('httpstat {}'.format(__version__))
+            quit(None, 0)
 
-    curl_args = args[1:]
+        curl_args = args[1:]
 
-    # check curl args
-    exclude_options = ['-w', '-D', '-o', '-s']
-    for i in exclude_options:
-        if i in curl_args:
-            quit(yellow('Error: {} is not allowed in extra curl args'.format(i)), 1)
+        # check curl args
+        exclude_options = ['-w', '-D', '-o', '-s']
+        for i in exclude_options:
+            if i in curl_args:
+                quit(yellow('Error: {} is not allowed in extra curl args'.format(i)), 1)
 
     # tempfile for output
     bodyf = tempfile.NamedTemporaryFile(delete=False)
