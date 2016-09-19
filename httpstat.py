@@ -13,6 +13,7 @@ import json
 import sys
 import tempfile
 import subprocess
+import itertools
 
 
 __version__ = '1.1.3'
@@ -39,29 +40,36 @@ curl_format = """{
 }"""
 
 https_template = """
-  DNS Lookup   
+  DNS Lookup
   [a0000]        namelookup:{b0000}
-  TCP Connection   
+  {c0000}
+  TCP Connection
   [a0001]        connect:{b0001}
-  SSL Handshake   
+  {c0001}
+  SSL Handshake
   [{a0002}]        pretransfer:{b0002}
-  Server Processing   
+  {c0002}
+  Server Processing
   [{a0003}]        starttransfer:{b0003}
+  {c0003}
   Content Transfer
   [{a0004}]        total:{b0004}
+  {c0004}
 """[1:]
 
 http_template = """
-  DNS Lookup   
+  DNS Lookup
   [{a0000}]        namelookup:{b0000}
-  TCP Connection   
+  {c0000}
+  TCP Connection
   [{a0001}]        connect:{b0001}
-  SSL Handshake   
-  [{a0002}]        pretransfer:{b0002}
-  Server Processing   
+  {c0001}
+  Server Processing
   [{a0003}]        starttransfer:{b0003}
+  {c0003}
   Content Transfer
   [{a0004}]        total:{b0004}
+  {c0004}
 """[1:]
 
 
@@ -88,6 +96,14 @@ bold = make_color(1)
 underline = make_color(4)
 
 grayscale = {(i - 232): make_color('38;5;' + str(i)) for i in xrange(232, 256)}
+
+
+def createBars(section, total):
+    bars = ""
+    percent = int(section/total * 100)
+    for _ in itertools.repeat(None, percent):
+        bars += "|"
+    return (bars + str(percent) + "%")
 
 
 def quit(s, code=0):
@@ -131,14 +147,6 @@ def main():
         print('httpstat {}'.format(__version__))
         quit(None, 0)
 
-    curl_args = args[1:]
-
-    # check curl args
-    exclude_options = ['-w', '-D', '-o', '-s']
-    for i in exclude_options:
-        if i in curl_args:
-            quit(yellow('Error: {} is not allowed in extra curl args'.format(i)), 1)
-
     # tempfile for output
     bodyf = tempfile.NamedTemporaryFile(delete=False)
     bodyf.close()
@@ -152,7 +160,7 @@ def main():
         LC_ALL='C',
     )
     cmd_core = ['curl', '-w', curl_format, '-D', headerf.name, '-o', bodyf.name, '-s', '-S']
-    cmd = cmd_core + curl_args + [url]
+    cmd = cmd_core + [url]
     #print(cmd)
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=cmd_env)
     out, err = p.communicate()
@@ -232,10 +240,18 @@ def main():
     template = '\n'.join(tpl_parts)
 
     def fmta(s):
-        return cyan('{:^7}'.format(str(s) + 'ms'))
+        if(s < 25):
+            return green('{:^7}'.format(str(s) + 'ms'))
+        elif(s < 100):
+            return yellow('{:^7}'.format(str(s) + 'ms'))
+        else:
+            return red('{:^7}'.format(str(s) + 'ms'))
 
     def fmtb(s):
         return cyan('{:<7}'.format(str(s) + 'ms'))
+
+
+    total = d['time_total']
 
     stat = template.format(
         # a
@@ -250,6 +266,18 @@ def main():
         b0002=fmtb(d['time_pretransfer']),
         b0003=fmtb(d['time_starttransfer']),
         b0004=fmtb(d['time_total']),
+        # c
+        # c0000=fmtb(d['time_namelookup']),
+        # c0001=fmtb(d['time_connect']),
+        # c0002=fmtb(d['time_pretransfer']),
+        # c0003=fmtb(d['time_starttransfer']),
+        # c0004=fmtb(d['time_total']),
+        # c
+        c0000=cyan(createBars(d['range_dns'], total)),
+        c0001=cyan(createBars(d['range_connection'], total)),
+        c0002=cyan(createBars(d['range_ssl'], total)),
+        c0003=cyan(createBars(d['range_server'], total)),
+        c0004=cyan(createBars(d['range_transfer'], total)),
     )
     print()
     print(stat)
