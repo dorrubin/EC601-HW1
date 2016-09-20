@@ -8,5 +8,5 @@ httpstat:
 
 
 
-hehe.tex
+hehe.text:
 Empty file. Take it as an example to learn how to push files to github.
