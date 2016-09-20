@@ -40,9 +40,8 @@ curl_format = """{
 }"""
 
 https_template = """
-  DNS Lookup
+  DNS Lookup {c0000}
   [a0000]        namelookup:{b0000}
-  {c0000}
   TCP Connection
   [a0001]        connect:{b0001}
   {c0001}
@@ -58,18 +57,14 @@ https_template = """
 """[1:]
 
 http_template = """
-  DNS Lookup
-  [{a0000}]        namelookup:{b0000}
-  {c0000}
-  TCP Connection
-  [{a0001}]        connect:{b0001}
-  {c0001}
-  Server Processing
-  [{a0003}]        starttransfer:{b0003}
-  {c0003}
-  Content Transfer
-  [{a0004}]        total:{b0004}
-  {c0004}
+  ---- Graph ----
+  DNS Lookup        [{a0000}]{c0000}
+  TCP Connection    [{a0001}]{c0001}
+  Server Processing [{a0003}]{c0003}
+  Content Transfer  [{a0004}]{c0004}
+
+  ---- Timeline ----
+  namelookup:{b0000}-->   connect:{b0001}-->   starttransfer:{b0003}-->   total:{b0004}
 """[1:]
 
 
@@ -241,7 +236,7 @@ def main():
 
     # colorize template first line
     tpl_parts = template.split('\n')
-    tpl_parts[0] = grayscale[16](tpl_parts[0])
+    tpl_parts[0] = grayscale[0](tpl_parts[0])
     template = '\n'.join(tpl_parts)
 
     def fmta(section, total):
