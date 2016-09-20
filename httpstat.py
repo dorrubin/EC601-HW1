@@ -40,9 +40,8 @@ curl_format = """{
 }"""
 
 https_template = """
-  DNS Lookup
+  DNS Lookup {c0000}
   [a0000]        namelookup:{b0000}
-  {c0000}
   TCP Connection
   [a0001]        connect:{b0001}
   {c0001}
@@ -58,18 +57,14 @@ https_template = """
 """[1:]
 
 http_template = """
-  DNS Lookup
-  [{a0000}]        namelookup:{b0000}
-  {c0000}
-  TCP Connection
-  [{a0001}]        connect:{b0001}
-  {c0001}
-  Server Processing
-  [{a0003}]        starttransfer:{b0003}
-  {c0003}
-  Content Transfer
-  [{a0004}]        total:{b0004}
-  {c0004}
+  ---- Graph ----
+  DNS Lookup        [{a0000}]{c0000}
+  TCP Connection    [{a0001}]{c0001}
+  Server Processing [{a0003}]{c0003}
+  Content Transfer  [{a0004}]{c0004}
+
+  ---- Timeline ----
+  namelookup:{b0000}-->   connect:{b0001}-->   starttransfer:{b0003}-->   total:{b0004}
 """[1:]
 
 
@@ -95,12 +90,17 @@ cyan = make_color(36)
 bold = make_color(1)
 underline = make_color(4)
 
+
 grayscale = {(i - 232): make_color('38;5;' + str(i)) for i in xrange(232, 256)}
+
+
+def getPercent(section, total):
+    return int(section/total * 100)
 
 
 def createBars(section, total):
     bars = ""
-    percent = int(section/total * 100)
+    percent = getPercent(section, total)
     for _ in itertools.repeat(None, percent):
         bars += "|"
     return (bars + str(percent) + "%")
@@ -236,30 +236,37 @@ def main():
 
     # colorize template first line
     tpl_parts = template.split('\n')
-    tpl_parts[0] = grayscale[16](tpl_parts[0])
+    tpl_parts[0] = grayscale[0](tpl_parts[0])
     template = '\n'.join(tpl_parts)
 
-    def fmta(s):
-        if(s < 25):
-            return green('{:^7}'.format(str(s) + 'ms'))
-        elif(s < 100):
-            return yellow('{:^7}'.format(str(s) + 'ms'))
+    def fmta(section, total):
+        percent = getPercent(section, total)
+        if(percent < 33):
+            return green('{:^7}'.format(str(section) + 'ms'))
+        elif(percent < 66):
+            return yellow('{:^7}'.format(str(section) + 'ms'))
         else:
-            return red('{:^7}'.format(str(s) + 'ms'))
+            return red('{:^7}'.format(str(section) + 'ms'))
 
     def fmtb(s):
         return cyan('{:<7}'.format(str(s) + 'ms'))
 
+    def fmtc(bars, percent):
+        if(percent < 33):
+            return green('{:^7}'.format(str(bars)))
+        elif(percent < 66):
+            return yellow('{:^7}'.format(str(bars)))
+        else:
+            return red('{:^7}'.format(str(bars)))
 
     total = d['time_total']
-
     stat = template.format(
         # a
-        a0000=fmta(d['range_dns']),
-        a0001=fmta(d['range_connection']),
-        a0002=fmta(d['range_ssl']),
-        a0003=fmta(d['range_server']),
-        a0004=fmta(d['range_transfer']),
+        a0000=fmta(d['range_dns'], total),
+        a0001=fmta(d['range_connection'], total),
+        a0002=fmta(d['range_ssl'], total),
+        a0003=fmta(d['range_server'], total),
+        a0004=fmta(d['range_transfer'], total),
         # b
         b0000=fmtb(d['time_namelookup']),
         b0001=fmtb(d['time_connect']),
@@ -267,17 +274,11 @@ def main():
         b0003=fmtb(d['time_starttransfer']),
         b0004=fmtb(d['time_total']),
         # c
-        # c0000=fmtb(d['time_namelookup']),
-        # c0001=fmtb(d['time_connect']),
-        # c0002=fmtb(d['time_pretransfer']),
-        # c0003=fmtb(d['time_starttransfer']),
-        # c0004=fmtb(d['time_total']),
-        # c
-        c0000=cyan(createBars(d['range_dns'], total)),
-        c0001=cyan(createBars(d['range_connection'], total)),
-        c0002=cyan(createBars(d['range_ssl'], total)),
-        c0003=cyan(createBars(d['range_server'], total)),
-        c0004=cyan(createBars(d['range_transfer'], total)),
+        c0000=fmtc(createBars(d['range_dns'], total), getPercent(d['range_dns'], total)),
+        c0001=fmtc(createBars(d['range_connection'], total), getPercent(d['range_connection'], total)),
+        c0002=fmtc(createBars(d['range_ssl'], total),  getPercent(d['range_ssl'], total)),
+        c0003=fmtc(createBars(d['range_server'], total), getPercent(d['range_server'], total)),
+        c0004=fmtc(createBars(d['range_transfer'], total), getPercent(d['range_transfer'], total)),
     )
     print()
     print(stat)

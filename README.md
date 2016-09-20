@@ -4,12 +4,9 @@ Add the trello URL here:
 https://trello.com/b/sXBdxX1d/ec601-hw1
 
 
+httpstat:
 
-httpstat.py  :
 
 
-hehe.text  :
+hehe.tex
 Empty file. Take it as an example to learn how to push files to github.
-
-
-
