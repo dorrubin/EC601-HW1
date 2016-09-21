@@ -40,10 +40,11 @@ curl_format = """{
 }"""
 
 https_template = """
-  DNS Lookup {c0000}
-  [a0000]        namelookup:{b0000}
+  DNS Lookup 
+  [{a0000}]        namelookup:{b0000}
+  {c0000}
   TCP Connection
-  [a0001]        connect:{b0001}
+  [{a0001}]        connect:{b0001}
   {c0001}
   SSL Handshake
   [{a0002}]        pretransfer:{b0002}
