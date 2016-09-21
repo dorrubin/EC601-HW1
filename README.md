@@ -33,6 +33,3 @@ STEP 2:
 Pull the file from the master branch.
 Input "python httpstat.py cnn.com"(or any other website) in terminal to run the file.
 The output of the program will be the response of the connection to the website, including time of every step it takes and the percent.
-
-
-PS: hehe.txt in the branch is an empty file which is used to learn how to push files in github.
